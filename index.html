@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicație Bancară</title>
+    <script>
+        // Funcție pentru crearea unui cont bancar
+        function createAccount() {
+            const accountHolderName = document.getElementById("accountHolderName").value;
+            const initialBalance = parseFloat(document.getElementById("initialBalance").value);
+
+            fetch("/api/accounts/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    accountHolderName: accountHolderName,
+                    balance: initialBalance
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Contul a fost creat cu succes! ID: " + data.accountId);
+                loadAccounts(); // Reîncarcă lista de conturi
+            });
+        }
+
+        // Funcție pentru vizualizarea conturilor
+        function loadAccounts() {
+            fetch("/api/accounts/all")
+            .then(response => response.json())
+            .then(data => {
+                let result = "";
+                data.forEach(account => {
+                    result += `<p>Cont ID: ${account.accountId} | Nume: ${account.accountHolderName} | Sold: ${account.balance} Lei</p>`;
+                });
+                document.getElementById("accountList").innerHTML = result;
+            });
+        }
+
+        // Funcție pentru transferul de bani
+        function transferMoney() {
+            const fromAccountId = parseInt(document.getElementById("fromAccountId").value);
+            const toAccountId = parseInt(document.getElementById("toAccountId").value);
+            const amount = parseFloat(document.getElementById("amount").value);
+
+            fetch(`/api/accounts/transfer?fromAccountId=${fromAccountId}&toAccountId=${toAccountId}&amount=${amount}`, {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(success => {
+                if (success) {
+                    alert("Transferul a fost realizat cu succes!");
+                    loadAccounts(); // Reîncarcă lista de conturi
+                } else {
+                    alert("Eroare la transfer. Verificați soldul sau conturile.");
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Aplicație Bancară</h1>
+
+    <h2>Creare Cont Bancar</h2>
+    <label for="accountHolderName">Nume titular:</label>
+    <input type="text" id="accountHolderName" required><br><br>
+    
+    <label for="initialBalance">Sold inițial:</label>
+    <input type="number" id="initialBalance" required><br><br>
+    
+    <button onclick="createAccount()">Crează Cont</button>
+
+    <h2>Transfer Bani</h2>
+    <label for="fromAccountId">Cont Plecare (ID):</label>
+    <input type="number" id="fromAccountId" required><br><br>
+    
+    <label for="toAccountId">Cont Destinație (ID):</label>
+    <input type="number" id="toAccountId" required><br><br>
+    
+    <label for="amount">Sumă:</label>
+    <input type="number" id="amount" required><br><br>
+    
+    <button onclick="transferMoney()">Transferă Bani</button>
+
+    <h2>Lista Conturilor</h2>
+    <div id="accountList"></div>
+
+    <script>loadAccounts();</script>
+</body>
+</html>
